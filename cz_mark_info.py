@@ -4,6 +4,8 @@ from datetime import datetime
 from py_cz_api import Token
 from py_cz_api import Api
 
+from dadata import Dadata
+
 # Словари для читабельности
 ki_type = {'UNIT': 'КИЗ', 'BOX': 'КИТУ', 'GROUP': 'КИГУ'}
 prod_group = {'water': 'Упакованная вода', 'beer': 'Пиво', 'softdrinks': 'Напитки'}
@@ -46,7 +48,7 @@ def get_prod_date(res: dict):        # Получение даты розлив�
 
 api = Api(read_token())
 
-cis_list = ['0104610017254400215FWGPXk']        # КИЗ Пиво КЕГ
+cis_list = ['02046100172504882100208062508552891']        # КИЗ Пиво КЕГ
 result = get_result_from_api(cis_list)
 
 if not len(result.get('gtin')):     # проверка на валидность марки
@@ -73,7 +75,10 @@ if result.get('status') == 'RETIRED':       # Опциональный выво�
     print(f"Дата и время вывода из оборота: {date_convert(result.get('receiptDate')).strftime('%d.%m.%Y %H:%M')}")
     print(f"Причина вывода: {result.get('withdrawReason')}")
 
-print(f"Владелец: {owners.get(result.get('ownerInn'), result.get('ownerInn'))}")
+# Получение данных об организации по ИНН (через сервис DADATA)
+inn_token = "0584d318862ae69f75b82c35ceaaaac202143d23"
+dadata = Dadata(inn_token)
+print(f"Владелец: {dadata.find_by_id('party', result.get('ownerInn'))[0].get('value')}")
 
 if result.get('status') == 'INTRODUCED' and 'parent' in result:     # Вывод предка, если существует
     print(f"Входит в состав: {result.get('parent')}")
